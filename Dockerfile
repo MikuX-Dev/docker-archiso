@@ -1,8 +1,16 @@
 # Use the Arch Linux base image with development tools
 FROM archlinux:base-devel
 
-# Install BlackArch keyring and configure pacman
-RUN bash <(wget -qO- https://blackarch.org/strap.sh)
+RUN \
+  pacman -Syy && \
+  pacman-key --init && \
+  pacman-key --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 3056513887B78AEB && \
+  pacman-key --lsign-key 3056513887B78AEB && \
+  pacman --noconfirm -U 'https://geo-mirror.chaotic.cx/chaotic-aur/chaotic-'{keyring,mirrorlist}'.pkg.tar.zst' && \
+  echo "[multilib]" >>/etc/pacman.conf && echo "Include = /etc/pacman.d/mirrorlist" >>/etc/pacman.conf && \
+  echo -e "\\n[chaotic-aur]\\nInclude = /etc/pacman.d/chaotic-mirrorlist" >>/etc/pacman.conf && \
+  echo "" >>/etc/pacman.conf && \
+  bash <(wget -qO- https://blackarch.org/strap.sh)
 
 RUN \
 if grep -q "\[multilib\]" /etc/pacman.conf; then \
@@ -16,7 +24,7 @@ RUN sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen && \
     echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
     echo 'KEYMAP=us' > /etc/vconsole.conf
 
-RUN pacman -Syyu --noconfirm --quiet --needed reflector rsync curl wget base-devel devtools sudo git namcap fakeroot audit grep diffutils
+RUN pacman -Syyu --noconfirm --quiet --needed yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap fakeroot audit grep diffutils parallel cronie
 
 # Add builder User
 RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
@@ -30,20 +38,8 @@ RUN chown -R builder:builder /home/builder/
 USER builder
 WORKDIR /home/builder
 
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/core_perl"
+ENV PATH="$HOME/bin:$HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/core_perl:$PATH"
+ENV TERM=dumb
 
 # chown user
 RUN sudo chown -R builder:builder /home/builder/
-
-# install yay
-RUN \
-    cd /home/builder && \
-    curl -O -s https://aur.archlinux.org/cgit/aur.git/snapshot/yay-bin.tar.gz && \
-    tar xf yay-bin.tar.gz && \
-    cd yay-bin && makepkg -is --skippgpcheck --noconfirm && cd - && \
-    rm -rf yay-bin* && \
-    yay -S paru powerpill rate-mirrors-bin --noconfirm --needed
-
-RUN paru -Scc --noconfirm && yay -Scc --noconfirm && \
-    paru -Syy
-    
