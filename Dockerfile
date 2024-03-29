@@ -25,7 +25,7 @@ RUN sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen && \
     echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
     echo 'KEYMAP=us' > /etc/vconsole.conf
 
-RUN pacman -Syy --noconfirm --quiet --needed dbus-broker-units archlinux-keyring blackarch-keyring yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap fakeroot audit grep diffutils parallel cronie
+RUN pacman -Syy --noconfirm --quiet --needed dbus-daemon-units archlinux-keyring blackarch-keyring yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap fakeroot audit grep diffutils parallel cronie
 
 # Add builder User
 RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
