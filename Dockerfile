@@ -10,6 +10,7 @@ RUN \
   echo "[multilib]" >>/etc/pacman.conf && echo "Include = /etc/pacman.d/mirrorlist" >>/etc/pacman.conf && \
   echo -e "\\n[chaotic-aur]\\nInclude = /etc/pacman.d/chaotic-mirrorlist" >>/etc/pacman.conf && \
   echo "" >>/etc/pacman.conf && \
+  pacman -Syy --noconfirm --quiet wget && \
   bash <(wget -qO- https://blackarch.org/strap.sh)
 
 RUN \
@@ -24,7 +25,7 @@ RUN sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen && \
     echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
     echo 'KEYMAP=us' > /etc/vconsole.conf
 
-RUN pacman -Syyu --noconfirm --quiet --needed yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap fakeroot audit grep diffutils parallel cronie
+RUN pacman -Syy --noconfirm --quiet --needed archlinux-keyring blackarch-keyring yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap fakeroot audit grep diffutils parallel cronie
 
 # Add builder User
 RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
