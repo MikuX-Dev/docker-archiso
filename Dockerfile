@@ -32,7 +32,6 @@ RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
     echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     usermod -a -G docker builder && \
-    usermod -a -G libinput builder && \
     systemctl enable docker
 
 # chown user
