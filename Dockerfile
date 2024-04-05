@@ -32,7 +32,8 @@ RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
     sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/g' /etc/sudoers && \
     echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
     echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-    usermod -a -G docker builder
+    usermod -a -G docker builder && \
+    usermod -a -G libinput builder
 
 # chown user
 RUN chown -R builder:builder /home/builder/
