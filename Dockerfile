@@ -5,7 +5,11 @@ SHELL [ "/bin/bash", "-c" ]
 
 ENV PATH="/home/builder/bin:/home/builder/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/core_perl:$PATH"
 ENV TERM=dumb
-ENV LANG=en_US.UTF-8
+
+RUN sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen && \
+  locale-gen && \
+  echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
+  echo "KEYMAP=us" > /etc/vconsole.conf
 
 # Configure environment
 RUN pacman-key --init && \
@@ -23,17 +27,16 @@ RUN pacman -Syy --noconfirm --needed --noprogressbar wget bash && \
 
 RUN pacman -Sy --noprogressbar --noconfirm yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap audit grep diffutils parallel cronie
 
-RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
-  sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/g' /etc/sudoers && \
-  echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-  echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-  chown -R builder:builder /home/builder && \
-  chgrp buidler /home/builder && \
-  chmod g+ws /home/builder && \
-  setfacl -m u::rwx,g::rwx /home/builder && \
-  setfacl -d --set u::rwx,g::rwx,o::- /home/builder && \
-  usermod -a -G docker builder && \
-  systemctl enable docker
+RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder
+RUN sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/g' /etc/sudoers
+RUN echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers 
+RUN echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+RUN chown -R builder:builder /home/builder
+RUN chmod g+ws /home/builder
+RUN setfacl -m u::rwx,g::rwx /home/builder
+RUN setfacl -d --set u::rwx,g::rwx,o::- /home/builder
+RUN usermod -a -G docker builder
+RUN systemctl enable docker
 
 RUN	sudo -u builder mkdir /home/builder/bin
 RUN	sudo -u builder mkdir -p /home/builder/.local/bin
