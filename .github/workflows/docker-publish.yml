@@ -16,7 +16,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     container:
-      image: mikuxdev/archlinux-pkgbuild:latest
+      image: unknownjustuser/arch:base-devel-2024.04
 
     steps:
       - name: checkout code
