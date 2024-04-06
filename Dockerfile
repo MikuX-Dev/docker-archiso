@@ -1,5 +1,4 @@
-FROM scratch
-ADD TEMPLATE_ROOTFS_FILE /
+FROM archlinux:base-devel
 LABEL maintainer="unknownjustuser <unknown.just.user@proton.me>"
 
 SHELL [ "/bin/bash", "-c" ]
