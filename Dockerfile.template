@@ -6,7 +6,11 @@ SHELL [ "/bin/bash", "-c" ]
 
 ENV PATH="/home/builder/bin:/home/builder/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/core_perl:$PATH"
 ENV TERM=dumb
-ENV LANG=en_US.UTF-8
+
+RUN sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen && \
+  locale-gen && \
+  echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
+  echo "KEYMAP=us" > /etc/vconsole.conf
 
 # Configure environment
 RUN pacman-key --init && \
