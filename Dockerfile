@@ -1,60 +1,47 @@
-# Use the Arch Linux base image with development tools
 FROM archlinux:base-devel
+LABEL maintainer="unknownjustuser <unknown.just.user@proton.me>"
 
-# Install BlackArch keyring and configure pacman
-RUN curl https://raw.githubusercontent.com/Athena-OS/package-source/main/packages/aegis/strap.sh -o strap.sh; chmod +x strap.sh; ./strap.sh; rm -rf strap.sh && \
-    pacman -Syyu --noconfirm --quiet --needed
+SHELL [ "/bin/bash", "-c" ]
 
-RUN \
-if grep -q "\[multilib\]" /etc/pacman.conf; then \
-  sed -i '/^\[multilib\]/,/Include = \/etc\/pacman.d\/mirrorlist/ s/^#//' /etc/pacman.conf; \
-else \
-  echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" | tee -a /etc/pacman.conf; \
-fi
+ENV PATH="/home/builder/bin:/home/builder/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/core_perl:$PATH"
+ENV TERM=dumb
+ENV LANG=en_US.UTF-8
 
-RUN sed -i "s/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g" /etc/locale.gen && \
-    locale-gen && \
-    echo "LANG=en_US.UTF-8" > /etc/locale.conf && \
-    echo 'KEYMAP=us' > /etc/vconsole.conf
+# Configure environment
+RUN pacman-key --init && \
+  pacman -Syy && \
+  pacman-key --keyserver hkp://keyserver.ubuntu.com:80 --recv-key 3056513887B78AEB && \
+  pacman-key --lsign-key 3056513887B78AEB && \
+  pacman --noconfirm -U 'https://geo-mirror.chaotic.cx/chaotic-aur/chaotic-'{keyring,mirrorlist}'.pkg.tar.zst' && \
+  echo "[multilib]" >>/etc/pacman.conf && echo "Include = /etc/pacman.d/mirrorlist" >>/etc/pacman.conf && \
+  echo -e "\\n[chaotic-aur]\\nInclude = /etc/pacman.d/chaotic-mirrorlist" >>/etc/pacman.conf && \
+  echo "" >>/etc/pacman.conf
 
-# Update the system and install essential packages
-RUN pacman -Syy --noconfirm --quiet --needed reflector rsync curl wget base-devel archiso devtools
+RUN pacman -Syy --noconfirm --needed --noprogressbar wget bash && \
+  bash <(wget -qO- https://blackarch.org/strap.sh) && \
+  pacman -Syyu --noconfirm --needed --noprogressbar
 
-# Add builder User
+RUN pacman -Sy --noprogressbar --noconfirm yay archiso audit aurutils autoconf base base-devel cmake curl devtools docker docker-buildx docker-compose fakeroot glibc-locales gnupg grep gzip jq less make man namcap openssh openssl parallel pkgconf python python-apprise python-pip rsync squashfs-tools tar unzip vim wget yq zip paru reflector git-lfs openssh git namcap audit grep diffutils parallel cronie
+
 RUN useradd -m -d /home/builder -s /bin/bash -G wheel builder && \
-    sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/g' /etc/sudoers && \
-    echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
-    echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+  sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/g' /etc/sudoers && \
+  echo "builder ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+  echo "root ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+  chown -R builder:builder /home/builder && \
+  chgrp buidler /home/builder && \
+  chmod g+ws /home/builder && \
+  setfacl -m u::rwx,g::rwx /home/builder && \
+  setfacl -d --set u::rwx,g::rwx,o::- /home/builder && \
+  usermod -a -G docker builder && \
+  systemctl enable docker
 
-# chown user
-RUN chown -R builder:builder /home/builder/
+RUN	sudo -u builder mkdir /home/builder/bin
+RUN	sudo -u builder mkdir -p /home/builder/.local/bin
+RUN	sudo -u builder touch /home/builder/.gitconfig
+RUN sudo -u builder mkdir -p /home/builder/.ssh
+RUN sudo -u builder touch /home/builder/.ssh/config
+RUN sudo -u builder touch /home/builder/.ssh/known_hosts
+RUN sudo -u builder ssh-keyscan github.com >/home/builder/.ssh/known_hosts
 
-USER builder
-WORKDIR /home/builder
-
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/bin/core_perl"
-
-# chown user
-RUN sudo chown -R builder:builder /home/builder/
-
-# install yay
-RUN \
-    cd /home/builder && \
-    curl -O -s https://aur.archlinux.org/cgit/aur.git/snapshot/yay-bin.tar.gz && \
-    tar xf yay-bin.tar.gz && \
-    cd yay-bin && makepkg -is --skippgpcheck --noconfirm && cd - && \
-    rm -rf yay-bin* && \
-    yay -S paru powerpill rate-mirrors-bin --noconfirm --needed
-
-RUN paru -Scc --noconfirm && yay -Scc --noconfirm && \
-    paru -Syy
-
-USER root
-
-RUN chown -R builder:builder /home/builder/
-
-RUN pacman -Scc --noconfirm
-
-RUN pacman -Syy
-
-WORKDIR /home/builder
+# USER builder
+# WORKDIR /home/builder
